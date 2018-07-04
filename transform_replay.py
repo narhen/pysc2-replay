@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from pysc2.lib import app, features, point
+from pysc2.lib import features, point
+from absl import app, flags
 from pysc2.env.environment import TimeStep, StepType
 from pysc2 import run_configs
 from s2clientprotocol import sc2api_pb2 as sc_pb
-import gflags as flags
 import importlib
 
 FLAGS = flags.FLAGS
@@ -77,12 +77,15 @@ class ReplayEnv:
         return True
 
     def start(self):
-        _features = features.Features(self.controller.game_info())
+        _features = features.features_from_game_info(self.controller.game_info())
 
         while True:
             self.controller.step(self.step_mul)
             obs = self.controller.observe()
-            agent_obs = _features.transform_obs(obs.observation)
+            try:
+                agent_obs = _features.transform_obs(obs)
+            except:
+                pass
 
             if obs.player_result: # Episide over.
                 self._state = StepType.LAST
